@@ -1,0 +1,52 @@
+---
+title: "Practical Machine Learning project"
+output: html_document
+---
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit, we could collect data about personal activities, but they rarely quantify how well we do it. In this project, we use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants to predict their manners of their exercises.
+
+### Data processing
+
+#### Load data
+```{r, echo=TRUE}
+setwd("~/GIT_REPO/PMachineL")
+trainData <- read.csv("~/GIT_REPO/PMachineL/pml-training.cvs", na.strings=c("NA","#DIV/0!"))
+testData <- read.csv("~/GIT_REPO/PMachineL/pml-testing.cvs", na.strings=c("NA","#DIV/0!"))
+```
+#### Clean data
+
+We remove columns with all missing values and unnessary columns for predicting such as: user_name, raw_timestamp, window.
+```{r}
+for(i in c(8:(ncol(trainData)-1))) {trainData[,i] = as.numeric(as.character(trainData[,i]))}
+ftrainData = trainData [, colSums(is.na(trainData))==0]
+finalTrain = ftrainData[, c(8:ncol(ftrainData))]
+for(i in c(8:(ncol(testData)-1))) {testData[,i] = as.numeric(as.character(testData[,i]))}
+ftestData = testData [, colSums(is.na(testData))==0]
+finalTest = ftestData[,8:ncol(ftestData)]
+```
+
+### Build models
+```{r}
+library(caret)
+library(randomForest)
+inTrain = createDataPartition(y=finalTrain$classe, p=0.6, list=FALSE )
+training = finalTrain[inTrain,]
+testing = finalTrain[-inTrain,]
+```
+I chose random forests model because it is more accuracy than other methods such as boosting, trees.
+### Random forests
+```{r}
+set.seed (123)
+modelFit = randomForest (classe~., data = training, ntree =150)
+modelFit
+```
+As the result, the error rate is just less than 1%, and the accuracy is around 99%
+
+### Predictions
+
+```{r}
+prediction <- as.character(predict(modelFit, finalTest))
+prediction
+```
+
+
